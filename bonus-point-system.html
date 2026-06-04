@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>賞与ポイント申請システム</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#eef2f7;--surface:#fff;--surface2:#f5f7fa;--border:#ccd5e0;--border2:#b0bdd0;
+    --accent:#1a56cc;--accent2:#1040a8;--gold:#9a6800;--gold-bg:#fff8e1;
+    --green:#166b3e;--green-bg:#e4f7ed;--red:#b83025;--red-bg:#fdecea;
+    --orange:#b05000;--orange-bg:#fff3e0;--text:#14213d;--text2:#2e3f5c;--text3:#5a6a83;
+    --sidebar-bg:#182848;--sidebar-hover:#263d6a;--radius:12px;
+    --shadow:0 2px 10px rgba(20,40,90,.09);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.65;}
+  .app{display:flex;min-height:100vh;}
+  .sidebar{width:230px;background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;transition:transform .3s ease;box-shadow:2px 0 16px rgba(0,0,0,.15);}
+  .main{margin-left:230px;flex:1;padding:32px 36px;}
+  .logo{padding:28px 22px 18px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:10px;}
+  .logo-title{font-size:14px;font-weight:900;color:#fff;}
+  .logo-sub{font-size:12px;color:rgba(200,220,255,.65);margin-top:3px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:12px 22px;cursor:pointer;color:rgba(200,220,255,.85);font-size:14px;font-weight:500;transition:all .15s;border-left:4px solid transparent;user-select:none;}
+  .nav-item:hover{background:var(--sidebar-hover);color:#fff;}
+  .nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:#78b4ff;}
+  .nav-icon{font-size:17px;width:22px;text-align:center;}
+  .nav-badge{margin-left:auto;background:#b83025;color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:12px;font-family:'DM Mono',monospace;}
+  .page{display:none;}.page.active{display:block;}
+  .page-header{margin-bottom:28px;}
+  .page-title{font-size:24px;font-weight:900;color:var(--text);}
+  .page-sub{color:var(--text3);font-size:14px;margin-top:5px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);}
+  .card-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--bg);}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;position:relative;overflow:hidden;box-shadow:var(--shadow);}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+  .stat-card.blue::before{background:linear-gradient(90deg,#1a56cc,#5590ee);}
+  .stat-card.gold::before{background:linear-gradient(90deg,#c8920a,#e8b835);}
+  .stat-card.green::before{background:linear-gradient(90deg,#166b3e,#28a865);}
+  .stat-card.red::before{background:linear-gradient(90deg,#b83025,#e05040);}
+  .stat-label{font-size:12px;font-weight:700;color:var(--text3);}
+  .stat-value{font-size:32px;font-weight:900;margin:8px 0 3px;font-family:'DM Mono',monospace;}
+  .stat-value.blue{color:var(--accent);}.stat-value.gold{color:var(--gold);}
+  .stat-value.green{color:var(--green);}.stat-value.red{color:var(--red);}
+  .stat-sub{font-size:12px;color:var(--text3);}
+  .form-section{margin-bottom:28px;}
+  .form-section-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--bg);}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .form-group{display:flex;flex-direction:column;gap:7px;}
+  label{font-size:13px;font-weight:700;color:var(--text2);}
+  label .req{color:var(--red);margin-left:3px;}
+  input,select,textarea{background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:15px;transition:border-color .15s,box-shadow .15s;outline:none;width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,86,204,.12);background:#fff;}
+  textarea{resize:vertical;min-height:90px;}
+  .checkbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .check-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:var(--surface2);border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;user-select:none;}
+  .check-item:hover{border-color:var(--accent);background:#eaf0ff;}
+  .check-item.checked{border-color:var(--accent);background:#eaf0ff;}
+  .check-item.heavy:hover{border-color:var(--red);background:var(--red-bg);}
+  .check-item.heavy.checked{border-color:var(--red);background:var(--red-bg);}
+  .check-box{width:22px;height:22px;border:2px solid var(--border2);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:all .15s;margin-top:1px;background:white;}
+  .check-item.checked .check-box{background:var(--accent);border-color:var(--accent);color:white;}
+  .check-item.heavy.checked .check-box{background:var(--red);border-color:var(--red);color:white;}
+  .check-label{flex:1;}
+  .check-name{font-size:14px;font-weight:700;color:var(--text);}
+  .check-pts{font-size:13px;color:var(--accent);font-family:'DM Mono',monospace;font-weight:600;margin-top:2px;}
+  .check-note{font-size:12px;color:var(--red);margin-top:3px;font-weight:600;}
+  .check-examples{font-size:12px;color:var(--text3);margin-top:4px;line-height:1.5;}
+  .pts-preview{padding:16px 20px;background:#e8f0ff;border:2px solid var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:space-between;margin-top:16px;}
+  .pts-preview-label{font-size:14px;font-weight:700;color:var(--text2);}
+  .pts-preview-val{font-size:26px;font-weight:900;color:var(--accent);font-family:'DM Mono',monospace;}
+  .btn{padding:12px 24px;border-radius:8px;font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:8px;}
+  .btn-primary{background:var(--accent);color:white;box-shadow:0 2px 8px rgba(26,86,204,.25);}
+  .btn-primary:hover{background:var(--accent2);transform:translateY(-1px);}
+  .btn-danger{background:var(--red);color:white;}
+  .btn-danger:hover{opacity:.88;}
+  .btn-ghost{background:white;color:var(--text2);border:2px solid var(--border);}
+  .btn-ghost:hover{background:var(--surface2);color:var(--text);border-color:var(--border2);}
+  .btn-sm{padding:7px 14px;font-size:13px;}
+  .btn-warning{background:#c8920a;color:white;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th{padding:11px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text2);background:var(--surface2);border-bottom:2px solid var(--border);}
+  td{padding:13px 16px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:var(--surface2);}
+  .tag{display:inline-block;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;}
+  .tag-blue{background:#ddeaff;color:var(--accent);}
+  .tag-gold{background:var(--gold-bg);color:var(--gold);}
+  .tag-red{background:var(--red-bg);color:var(--red);}
+  .tag-green{background:var(--green-bg);color:var(--green);}
+  .tag-orange{background:var(--orange-bg);color:var(--orange);}
+  .tag-gray{background:#eef0f6;color:var(--text3);}
+  .approval-select{padding:7px 12px;border-radius:7px;font-size:13px;font-weight:700;background:white;border:2px solid var(--border);color:var(--text);cursor:pointer;}
+  .rank-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);}
+  .rank-row:last-child{border-bottom:none;}
+  .rank-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;font-family:'DM Mono',monospace;}
+  .rank-1{background:#c8920a;color:white;}.rank-2{background:#6a7a92;color:white;}.rank-3{background:#b05000;color:white;}
+  .rank-n{background:var(--surface2);color:var(--text3);border:2px solid var(--border);}
+  .rank-name{flex:1;font-weight:700;font-size:15px;color:var(--text);}
+  .rank-pts{font-family:'DM Mono',monospace;font-weight:900;color:var(--accent);font-size:16px;}
+  .rank-bar-wrap{flex:2;}
+  .rank-bar{height:7px;border-radius:4px;background:var(--border);overflow:hidden;}
+  .rank-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),#5590ee);transition:width .6s ease;}
+  .toast{position:fixed;bottom:28px;right:28px;z-index:9999;background:var(--text);color:white;border-radius:var(--radius);padding:16px 22px;box-shadow:0 8px 32px rgba(0,0,0,.22);display:flex;align-items:center;gap:12px;transform:translateY(80px);opacity:0;transition:all .3s ease;min-width:280px;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast-icon{font-size:20px;}.toast-text{font-size:14px;font-weight:600;color:white;}
+  .hamburger{display:none;position:fixed;top:14px;left:14px;z-index:200;background:var(--sidebar-bg);border:none;border-radius:8px;width:44px;height:44px;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:white;}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+  .month-report-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;}
+  .month-stat{padding:16px;background:var(--surface2);border-radius:10px;border:2px solid var(--border);}
+  .month-stat-label{font-size:12px;color:var(--text3);font-weight:600;margin-bottom:7px;}
+  .month-stat-val{font-size:22px;font-weight:900;font-family:'DM Mono',monospace;}
+  .section-gap{margin-bottom:22px;}
+  .btn-resolve{background:var(--green);color:white;font-size:12px;padding:6px 12px;border-radius:6px;border:none;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-weight:700;display:inline-flex;align-items:center;gap:5px;transition:opacity .15s;}
+  .btn-resolve:hover{opacity:.85;}
+  .wip-row td{background:#fffdf0 !important;}
+  .resolve-modal{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);align-items:center;justify-content:center;}
+  .edit-modal{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);align-items:center;justify-content:center;}
+  .edit-modal.open{display:flex;}
+  .edit-box{background:white;border-radius:16px;padding:28px 32px;width:min(520px,95vw);box-shadow:0 8px 40px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;}
+  .edit-title{font-size:18px;font-weight:900;margin-bottom:6px;color:var(--text);}
+  .edit-sub{font-size:13px;color:var(--text3);margin-bottom:20px;}
+  .resolve-modal.open{display:flex;}
+  .resolve-box{background:white;border-radius:16px;padding:28px 32px;width:min(500px,95vw);box-shadow:0 8px 40px rgba(0,0,0,.2);}
+  .resolve-title{font-size:18px;font-weight:900;margin-bottom:6px;color:var(--text);}
+  .resolve-sub{font-size:13px;color:var(--text3);margin-bottom:20px;}
+  .resolve-info{background:var(--surface2);border-radius:10px;padding:14px 16px;margin-bottom:20px;border:1px solid var(--border);}
+  .resolve-info-row{display:flex;gap:10px;margin-bottom:7px;font-size:14px;}
+  .resolve-info-row:last-child{margin-bottom:0;}
+  .resolve-info-label{color:var(--text3);font-weight:600;min-width:65px;flex-shrink:0;}
+  .resolve-info-val{font-weight:700;}
+
+  /* ===== SETTINGS ===== */
+  .settings-section{margin-bottom:28px;}
+  .settings-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .settings-row:last-child{border-bottom:none;}
+  .settings-name{flex:1;font-size:14px;font-weight:600;}
+  .danger-zone{background:var(--red-bg);border:2px solid var(--red);border-radius:var(--radius);padding:20px;margin-top:8px;}
+  .danger-zone-title{font-size:14px;font-weight:700;color:var(--red);margin-bottom:8px;}
+  .danger-zone-desc{font-size:13px;color:var(--text2);margin-bottom:14px;}
+  .info-box{background:#e8f0ff;border:2px solid var(--accent);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.7;}
+
+  @media(max-width:900px){.grid-4{grid-template-columns:1fr 1fr;}}
+  @media(max-width:700px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .main{margin-left:0;padding:72px 16px 28px;}
+    .hamburger{display:flex;}
+    .overlay.show{display:block;}
+    .grid-2,.grid-4{grid-template-columns:1fr;}
+    .form-row{grid-template-columns:1fr;}
+    .checkbox-grid{grid-template-columns:1fr;}
+    .page-title{font-size:20px;}
+  }
+</style>
+</head>
+<body>
+<div class="hamburger" id="hamburger">☰</div>
+<div class="overlay" id="overlay"></div>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="logo">
+      <div class="logo-title">賞与ポイント管理</div>
+      <div class="logo-sub">申請・集計システム</div>
+    </div>
+    <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span>ダッシュボード</div>
+    <div class="nav-item" data-page="apply"><span class="nav-icon">✏️</span>案件申請</div>
+    <div class="nav-item" data-page="history"><span class="nav-icon">📋</span>申請履歴</div>
+    <div class="nav-item" data-page="approval"><span class="nav-icon">🔐</span>社長承認 <span class="nav-badge" id="approval-badge" style="display:none">0</span></div>
+    <div class="nav-item" data-page="monthly"><span class="nav-icon">📅</span>月次レポート</div>
+    <div class="nav-item" data-page="settings"><span class="nav-icon">⚙️</span>設定</div>
+    <div style="margin-top:auto;padding:18px 22px;border-top:1px solid rgba(255,255,255,.1);">
+      <div style="font-size:12px;color:rgba(200,220,255,.6);">ログイン中</div>
+      <div id="current-user-display" style="font-size:15px;font-weight:700;margin-top:4px;color:white;">—</div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">ダッシュボード</div>
+        <div class="page-sub" id="dash-date"></div>
+      </div>
+      <div class="grid-4 section-gap">
+        <div class="stat-card blue"><div class="stat-label">今月 総ポイント</div><div class="stat-value blue" id="s-total">0</div><div class="stat-sub">全担当者合計</div></div>
+        <div class="stat-card gold"><div class="stat-label">今月 申請件数</div><div class="stat-value gold" id="s-count">0</div><div class="stat-sub">件</div></div>
+        <div class="stat-card green"><div class="stat-label">管理受託 件数</div><div class="stat-value green" id="s-mgmt">0</div><div class="stat-sub">件</div></div>
+        <div class="stat-card red"><div class="stat-label">承認待ち 重案件</div><div class="stat-value red" id="s-pending">0</div><div class="stat-sub">件</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-title">🏆 今月ランキング</div><div id="ranking-list"></div></div>
+        <div class="card"><div class="card-title">📝 最近の申請</div><div id="recent-list"></div></div>
+      </div>
+    </div>
+
+    <!-- APPLY -->
+    <div class="page" id="page-apply">
+      <div class="page-header">
+        <div class="page-title">案件申請</div>
+        <div class="page-sub">フォームを入力して送信してください（目標：1分以内）</div>
+      </div>
+      <div class="card" style="max-width:700px;">
+        <div class="form-section">
+          <div class="form-section-title">📌 基本情報</div>
+          <div class="form-row">
+            <div class="form-group"><label>申請日<span class="req">*</span></label><input type="date" id="f-date"></div>
+            <div class="form-group"><label>担当者 1人目<span class="req">*</span></label><select id="f-staff"><option value="">選択してください</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>担当者 2人目<span style="font-size:11px;color:var(--text3);margin-left:4px;">（任意・2人対応の場合）</span></label><select id="f-staff2"><option value="">なし（1人対応）</option></select></div>
+            <div class="form-group" id="split-preview-wrap" style="display:none;">
+              <label>2人対応時のポイント</label>
+              <div style="padding:12px 14px;background:var(--gold-bg);border:2px solid var(--gold);border-radius:8px;font-size:14px;font-weight:700;color:var(--gold);">各自 <span id="split-pts">0</span> pt（半分ずつ）</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>物件名<span class="req">*</span></label><input type="text" id="f-property" placeholder="例：○○マンション101"></div>
+            <div class="form-group"><label>相手名<span class="req">*</span></label><input type="text" id="f-owner" placeholder="借主名、業者名、なし　など"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">⭐ 加点項目（複数選択可）</div>
+          <div class="checkbox-grid" id="checkbox-grid"></div>
+          <div class="pts-preview">
+            <div class="pts-preview-label">この申請のポイント合計<span id="pts-split-note" style="font-size:12px;color:var(--gold);margin-left:8px;"></span></div>
+            <div class="pts-preview-val"><span id="pts-total">0</span> pt</div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">📄 案件内容</div>
+          <div class="form-group"><label>自由記入（任意）</label><textarea id="f-note" placeholder="例：雨漏り対応完了、設備交換完了、管理受託契約締結"></textarea></div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;">
+          <button class="btn btn-ghost" onclick="resetForm()">🔄 リセット</button>
+          <button class="btn btn-primary" onclick="submitForm()">📤 申請する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="page-header">
+        <div class="page-title">申請履歴</div>
+        <div class="page-sub">🔄 対応中の案件は「✅ 解決済みにする」ボタンで10秒で完了登録できます</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;align-items:center;">
+          <select id="filter-staff" style="width:150px;" onchange="renderHistory()"><option value="">全担当者</option></select>
+          <select id="filter-month" style="width:130px;" onchange="renderHistory()"><option value="">全月</option></select>
+          <div style="margin-left:auto;font-size:14px;color:var(--text2);font-weight:600;">合計: <span id="history-total-pts" style="color:var(--accent);font-weight:900;font-family:'DM Mono'">0</span> pt</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>申請日</th><th>担当者</th><th>物件名</th><th>相手名</th><th>種別</th><th>ポイント</th><th>ステータス</th><th></th></tr></thead>
+            <tbody id="history-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPROVAL -->
+    <div class="page" id="page-approval">
+      <div class="page-header">
+        <div class="page-title">🔐 社長承認</div>
+        <div class="page-sub">重案件の承認・否認を行ってください</div>
+      </div>
+      <div class="card section-gap">
+        <div class="card-title">重案件一覧</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>申請日</th><th>担当者</th><th>物件名</th><th>相手名</th><th>案件内容</th><th>ポイント</th><th>承認ステータス</th></tr></thead>
+            <tbody id="approval-tbody"></tbody>
+          </table>
+        </div>
+        <div id="no-approval" style="text-align:center;padding:40px;color:var(--text3);display:none;">
+          <div style="font-size:40px;margin-bottom:10px;">✅</div>
+          <div style="font-size:15px;font-weight:600;">承認待ち案件はありません</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MONTHLY -->
+    <div class="page" id="page-monthly">
+      <div class="page-header">
+        <div class="page-title">月次レポート</div>
+        <div class="page-sub">担当者別・月別集計</div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap;align-items:center;">
+        <select id="report-month" style="width:150px;" onchange="renderMonthly()"></select>
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSVエクスポート</button>
+      </div>
+      <div class="card section-gap">
+        <div class="card-title">担当者別集計</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>担当者</th><th>当月PT</th><th>年間累計PT</th><th>管理受託</th><th>店舗・事務所</th><th>居住用</th><th>駐車場</th><th>軽微</th><th>通常(対応中)</th><th>通常(解決)</th><th>重案件(対応中)</th><th>重案件(解決)</th></tr></thead>
+            <tbody id="monthly-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">月次サマリー</div><div class="month-report-grid" id="monthly-summary"></div></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">⚙️ 設定</div>
+        <div class="page-sub">社員名・加点項目をここから変更できます</div>
+      </div>
+
+      <!-- 社員管理 -->
+      <div class="card section-gap">
+        <div class="card-title">👤 社員管理</div>
+        <div class="info-box">ここで追加・削除した内容は申請フォームのプルダウンにすぐ反映されます。</div>
+        <div id="staff-list" style="margin-bottom:16px;"></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="new-staff-name" placeholder="新しい社員名を入力" style="max-width:220px;">
+          <button class="btn btn-primary btn-sm" onclick="addStaff()">＋ 追加</button>
+        </div>
+      </div>
+
+      <!-- 加点項目管理 -->
+      <div class="card section-gap">
+        <div class="card-title">⭐ 加点項目・ポイント管理</div>
+        <div class="info-box">項目名やポイント数を変更できます。変更はすぐに申請フォームに反映されます。</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>項目名</th><th>ポイント</th><th>補足例</th><th></th></tr></thead>
+            <tbody id="items-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 危険ゾーン -->
+      <div class="card">
+        <div class="card-title">🗑️ データ管理</div>
+        <div class="danger-zone">
+          <div class="danger-zone-title">⚠️ 全データ削除</div>
+          <div class="danger-zone-desc">すべての申請履歴・設定をリセットします。この操作は取り消せません。</div>
+          <button class="btn btn-danger btn-sm" onclick="resetAllData()">全データを削除してリセット</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+
+
+<!-- EDIT MODAL -->
+<div class="edit-modal" id="edit-modal">
+  <div class="edit-box">
+    <div class="edit-title">✏️ 申請を編集</div>
+    <div class="edit-sub">内容を修正して保存してください</div>
+    <div class="form-section">
+      <div class="form-row">
+        <div class="form-group">
+          <label>申請日<span class="req">*</span></label>
+          <input type="date" id="em-date">
+        </div>
+        <div class="form-group">
+          <label>担当者 1人目<span class="req">*</span></label>
+          <select id="em-staff"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>担当者 2人目<span style="font-size:11px;color:var(--text3);margin-left:4px;">（任意）</span></label>
+          <select id="em-staff2"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>物件名<span class="req">*</span></label>
+          <input type="text" id="em-property">
+        </div>
+        <div class="form-group">
+          <label>相手名<span class="req">*</span></label>
+          <input type="text" id="em-owner">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>加点項目<span class="req">*</span></label>
+        <div id="em-items" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:20px;">
+        <label>案件内容</label>
+        <textarea id="em-note" style="min-height:80px;"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-ghost btn-sm" onclick="closeEditModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEdit()">💾 保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESOLVE MODAL -->
+<div class="resolve-modal" id="resolve-modal">
+  <div class="resolve-box">
+    <div class="resolve-title">✅ 解決済みにする</div>
+    <div class="resolve-sub">以下の案件を解決済みとして登録します（10秒で完了）</div>
+    <div class="resolve-info">
+      <div class="resolve-info-row"><span class="resolve-info-label">物件名</span><span class="resolve-info-val" id="rm-property">—</span></div>
+      <div class="resolve-info-row"><span class="resolve-info-label">相手名</span><span class="resolve-info-val" id="rm-owner">—</span></div>
+      <div class="resolve-info-row"><span class="resolve-info-label">担当者</span><span class="resolve-info-val" id="rm-staff">—</span></div>
+      <div class="resolve-info-row"><span class="resolve-info-label">対応中PT</span><span class="resolve-info-val" id="rm-wip-pts" style="color:var(--accent);">—</span></div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>解決種別<span class="req">*</span></label>
+      <select id="rm-type">
+        <option value="">選択してください</option>
+        <option value="minor">軽微案件（業者発注で解決）＋500pt</option>
+        <option value="normal_done">通常対応（解決）＋1,000pt</option>
+        <option value="heavy_done">重案件（解決）＋4,000pt ※承認制</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>解決メモ（任意）</label>
+      <textarea id="rm-note" placeholder="解決内容を簡単に記入" style="min-height:70px;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-ghost btn-sm" onclick="closeResolveModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitResolve()">✅ 解決済みで登録</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toast-icon">✅</span>
+  <span class="toast-text" id="toast-text"></span>
+</div>
+
+<script>
+// ===================== DEFAULT DATA =====================
+const DEFAULT_STAFF = ['太田','嶋村','新木','玉置','西岡'];
+const DEFAULT_ITEMS = [
+  {id:'mgmt',        label:'管理受託',               pts:10000, tag:'blue', heavy:false, examples:'管理受託契約締結、新規オーナー獲得'},
+  {id:'broker',      label:'店舗・事務所契約',         pts:10000, tag:'blue', heavy:false, examples:'店舗・事務所の新規契約、テナント誘致'},
+  {id:'mansion',     label:'居住用契約',               pts:5000,  tag:'gold', heavy:false, examples:'居住用物件の賃貸成約、入居者決定'},
+  {id:'parking',     label:'駐車場契約',               pts:1000,  tag:'gold', heavy:false, examples:'月極駐車場新規契約、増台'},
+  {id:'minor',       label:'軽微案件（業者発注で解決）', pts:500,   tag:'gray', heavy:false, examples:'水道パッキン交換、電球交換、簡単な清掃'},
+  {id:'normal_wip',  label:'通常対応（対応中）現場立会', pts:1000,  tag:'blue', heavy:false, examples:'設備故障の現場確認、業者手配、クレーム初動対応'},
+  {id:'normal_done', label:'通常対応（解決）',          pts:1000,  tag:'blue', heavy:false, examples:'設備交換完了、雨漏り修繕完了、クレーム解決'},
+  {id:'heavy_wip',   label:'重案件（対応中）',          pts:1000,  tag:'orange', heavy:false, examples:'大規模修繕の現場立会・調整、法的トラブルの初動'},
+  {id:'heavy_done',  label:'重案件（解決）',            pts:4000,  tag:'red',  heavy:true,  examples:'大規模修繕完了、屋根・外壁工事完了、法的トラブル解決'},
+];
+
+// ===================== STATE =====================
+function loadState() {
+  return {
+    staff: JSON.parse(localStorage.getItem('bp_staff') || JSON.stringify(DEFAULT_STAFF)),
+    items: JSON.parse(localStorage.getItem('bp_items') || JSON.stringify(DEFAULT_ITEMS)),
+    records: JSON.parse(localStorage.getItem('bp_records') || '[]'),
+    nextId: parseInt(localStorage.getItem('bp_nextid') || '1'),
+  };
+}
+let S = loadState();
+
+function saveAll() {
+  localStorage.setItem('bp_staff', JSON.stringify(S.staff));
+  localStorage.setItem('bp_items', JSON.stringify(S.items));
+  localStorage.setItem('bp_records', JSON.stringify(S.records));
+  localStorage.setItem('bp_nextid', String(S.nextId));
+}
+
+// ===================== INIT =====================
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => { navigateTo(el.dataset.page); closeSidebar(); });
+  });
+  document.getElementById('f-date').value = today();
+  document.getElementById('dash-date').textContent =
+    new Date().toLocaleDateString('ja-JP', {year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  document.getElementById('hamburger').addEventListener('click', openSidebar);
+  document.getElementById('overlay').addEventListener('click', closeSidebar);
+  rebuildUI();
+  renderAll();
+});
+
+function rebuildUI() {
+  // Staff selects
+  const fStaff = document.getElementById('f-staff');
+  fStaff.innerHTML = '<option value="">選択してください</option>';
+  S.staff.forEach(s => fStaff.innerHTML += `<option value="${s}">${s}</option>`);
+  fStaff.onchange = () => {
+    document.getElementById('current-user-display').textContent = fStaff.value || '—';
+    updateSplitPreview();
+  };
+
+  const fStaff2 = document.getElementById('f-staff2');
+  fStaff2.innerHTML = '<option value="">なし（1人対応）</option>';
+  S.staff.forEach(s => fStaff2.innerHTML += `<option value="${s}">${s}</option>`);
+  fStaff2.onchange = updateSplitPreview;
+
+  const fs = document.getElementById('filter-staff');
+  fs.innerHTML = '<option value="">全担当者</option>';
+  S.staff.forEach(s => fs.innerHTML += `<option value="${s}">${s}</option>`);
+
+  document.getElementById('current-user-display').textContent = S.staff[0] || '—';
+  buildCheckboxes();
+  populateMonthSelects();
+}
+
+function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function fmtDate(d) { return new Date(d).toLocaleDateString('ja-JP',{month:'short',day:'numeric'}); }
+function fmtPts(n) { return n.toLocaleString(); }
+
+// ===================== NAV =====================
+function navigateTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  if (page==='history')  renderHistory();
+  if (page==='approval') renderApproval();
+  if (page==='monthly')  renderMonthly();
+  if (page==='dashboard') renderDashboard();
+  if (page==='settings') renderSettings();
+}
+
+// ===================== CHECKBOXES =====================
+function buildCheckboxes() {
+  const grid = document.getElementById('checkbox-grid');
+  grid.innerHTML = '';
+  S.items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'check-item' + (item.heavy ? ' heavy' : '');
+    div.dataset.id = item.id;
+    div.innerHTML = `
+      <div class="check-box"></div>
+      <div class="check-label">
+        <div class="check-name">${item.label}</div>
+        <div class="check-pts">＋${item.pts.toLocaleString()} pt</div>
+        <div class="check-examples">例：${item.examples}</div>
+        ${item.heavy ? '<div class="check-note">※社長承認後に反映</div>' : ''}
+      </div>`;
+    div.addEventListener('click', () => toggleCheck(div, item));
+    grid.appendChild(div);
+  });
+}
+
+function toggleCheck(el, item) {
+  // 排他なし：複数選択可（重案件対応中と解決を別々に申請できる）
+  const checked = el.classList.toggle('checked');
+  el.querySelector('.check-box').textContent = checked ? '✓' : '';
+  updatePtsPreview();
+}
+
+function getCheckedItems() {
+  return [...document.querySelectorAll('.check-item.checked')].map(el => el.dataset.id);
+}
+
+function calcPtsForDisplay(record) {
+  let total = 0;
+  record.items.forEach(id => {
+    const item = S.items.find(i => i.id === id);
+    if (!item) return;
+    if (id === 'heavy_done') {
+      if (record.heavyStatus === 'approved') total += item.pts;
+      else if (record.heavyStatus === 'rejected') total += 1000;
+    } else {
+      total += item.pts;
+    }
+  });
+  // 2人対応の場合は半分
+  if (record.isSplit) total = Math.floor(total / 2);
+  return total;
+}
+
+function updatePtsPreview() {
+  let pts = 0;
+  getCheckedItems().forEach(id => {
+    if (id !== 'heavy_done') { const item = S.items.find(i=>i.id===id); if(item) pts += item.pts; }
+  });
+  document.getElementById('pts-total').textContent = fmtPts(pts);
+  updateSplitPreview();
+}
+
+function updateSplitPreview() {
+  const staff2 = document.getElementById('f-staff2')?.value;
+  const wrap = document.getElementById('split-preview-wrap');
+  if (!wrap) return;
+  if (staff2) {
+    let pts = 0;
+    getCheckedItems().forEach(id => {
+      const item = S.items.find(i=>i.id===id);
+      if (item && id !== 'heavy_done') pts += item.pts;
+    });
+    document.getElementById('split-pts').textContent = fmtPts(Math.floor(pts/2));
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+// ===================== SUBMIT =====================
+function submitForm() {
+  const date = document.getElementById('f-date').value;
+  const staff = document.getElementById('f-staff').value;
+  const staff2 = document.getElementById('f-staff2').value;
+  const property = document.getElementById('f-property').value.trim();
+  const owner = document.getElementById('f-owner').value.trim();
+  const note = document.getElementById('f-note').value.trim();
+  const items = getCheckedItems();
+  if (!date||!staff||!property||!owner) { showToast('❗','必須項目をすべて入力してください','red'); return; }
+  if (staff2 && staff2 === staff) { showToast('❗','1人目と2人目に同じ担当者は選べません','red'); return; }
+  if (items.length===0) { showToast('❗','加点項目を1つ以上選択してください','red'); return; }
+  const hasHeavy = items.includes('heavy_done');
+  const isSplit = !!staff2;
+  // 1人目のレコード
+  S.records.unshift({id:S.nextId++, date, staff, property, owner, note, items,
+    heavyStatus: hasHeavy?'pending':null, isSplit, splitWith: staff2||null,
+    createdAt:new Date().toISOString()});
+  // 2人目がいる場合は別レコード追加
+  if (staff2) {
+    S.records.unshift({id:S.nextId++, date, staff:staff2, property, owner, note, items,
+      heavyStatus: hasHeavy?'pending':null, isSplit:true, splitWith:staff,
+      createdAt:new Date().toISOString()});
+  }
+  saveAll(); resetForm(); renderAll();
+  showToast('✅', isSplit?`2人対応で申請しました（各自半分ずつ）`: hasHeavy?'申請しました（重案件は承認待ち）':'申請が完了しました！','green');
+  if (hasHeavy) setTimeout(()=>showToast('🔔','社長に承認通知を送信しました','blue'),1500);
+}
+
+function resetForm() {
+  document.getElementById('f-date').value = today();
+  document.getElementById('f-staff').value = '';
+  document.getElementById('f-staff2').value = '';
+  document.getElementById('f-property').value = '';
+  document.getElementById('f-owner').value = '';
+  document.getElementById('f-note').value = '';
+  const wrap = document.getElementById('split-preview-wrap');
+  if(wrap) wrap.style.display='none';
+  document.querySelectorAll('.check-item').forEach(el => { el.classList.remove('checked'); el.querySelector('.check-box').textContent=''; });
+  document.getElementById('pts-total').textContent = '0';
+}
+
+// ===================== RENDER ALL =====================
+function renderAll() { renderDashboard(); updateApprovalBadge(); }
+function currentMonth() { return new Date().toISOString().slice(0,7); }
+
+// ===================== DASHBOARD =====================
+function renderDashboard() {
+  const cm = currentMonth();
+  const thisMonth = S.records.filter(r=>r.date.startsWith(cm));
+  let total=0, mgmt=0, pending=0;
+  thisMonth.forEach(r => { total+=calcPtsForDisplay(r); if(r.items.includes('mgmt'))mgmt++; if(r.heavyStatus==='pending')pending++; });
+  document.getElementById('s-total').textContent = fmtPts(total);
+  document.getElementById('s-count').textContent = thisMonth.length;
+  document.getElementById('s-mgmt').textContent = mgmt;
+  document.getElementById('s-pending').textContent = pending;
+
+  const byStaff = {};
+  S.staff.forEach(s => byStaff[s]=0);
+  thisMonth.forEach(r => { byStaff[r.staff]=(byStaff[r.staff]||0)+calcPtsForDisplay(r); });
+  const sorted = Object.entries(byStaff).sort((a,b)=>b[1]-a[1]);
+  const maxPts = sorted[0]?.[1]||1;
+  document.getElementById('ranking-list').innerHTML = sorted.map(([name,pts],i)=>`
+    <div class="rank-row">
+      <div class="rank-num ${i<3?'rank-'+(i+1):'rank-n'}">${i+1}</div>
+      <div class="rank-name">${name}</div>
+      <div class="rank-bar-wrap"><div class="rank-bar"><div class="rank-bar-fill" style="width:${pts/maxPts*100}%"></div></div></div>
+      <div class="rank-pts">${fmtPts(pts)}</div>
+    </div>`).join('');
+
+  const recent = S.records.slice(0,6);
+  const recentEl = document.getElementById('recent-list');
+  if (!recent.length) { recentEl.innerHTML='<div style="text-align:center;padding:28px;color:var(--text3);">申請データがありません</div>'; return; }
+  recentEl.innerHTML = recent.map(r => {
+    const pts = calcPtsForDisplay(r);
+    const tags = r.items.map(id=>{ const item=S.items.find(i=>i.id===id); return item?`<span class="tag tag-${item.tag}">${item.label}</span>`:''; }).join(' ');
+    return `<div style="padding:11px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:13px;color:var(--text3);font-weight:600;">${fmtDate(r.date)}　${r.staff}</span>
+        <span style="font-family:'DM Mono';color:var(--accent);font-weight:900;font-size:15px;">${fmtPts(pts)} pt</span>
+      </div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:5px;">${r.property}</div>
+      <div>${tags}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===================== HISTORY =====================
+function renderHistory() {
+  const fStaff = document.getElementById('filter-staff').value;
+  const fMonth = document.getElementById('filter-month').value;
+  let data = [...S.records];
+  if (fStaff) data = data.filter(r=>r.staff===fStaff);
+  if (fMonth) data = data.filter(r=>r.date.startsWith(fMonth));
+  let totalPts=0; data.forEach(r=>totalPts+=calcPtsForDisplay(r));
+  document.getElementById('history-total-pts').textContent = fmtPts(totalPts);
+  const tbody = document.getElementById('history-tbody');
+  if (!data.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:36px;">データがありません</td></tr>'; return; }
+  tbody.innerHTML = data.map(r => {
+    const pts = calcPtsForDisplay(r);
+    const isWip = r.items.some(id=>['normal_wip','heavy_wip'].includes(id)) && !r.resolved;
+    const tags = r.items.filter(id=>id!=='heavy_done').map(id=>{ const item=S.items.find(i=>i.id===id); return item?`<span class="tag tag-${item.tag}">${item.label}</span>`:''; }).join(' ');
+    const status = r.heavyStatus==='pending'?'<span class="tag tag-orange">承認待ち</span>'
+      :r.heavyStatus==='approved'?'<span class="tag tag-green">承認済み</span>'
+      :r.heavyStatus==='rejected'?'<span class="tag tag-red">否認</span>'
+      :r.resolved?'<span class="tag tag-green">解決済み</span>'
+      :'<span class="tag tag-gray">通常</span>';
+    const resolveBtn = isWip ? `<button class="btn-resolve" onclick="openResolveModal(${r.id})">✅ 解決済みにする</button>` : '';
+    const rowClass = isWip ? 'wip-row' : '';
+    return `<tr class="${rowClass}">
+      <td>${fmtDate(r.date)}</td><td style="font-weight:700;">${r.staff}</td>
+      <td style="font-weight:700;">${r.property}${isWip?'<br><span style="font-size:11px;color:var(--orange);font-weight:600;">🔄 対応中</span>':''}</td>
+      <td>${r.owner}</td>
+      <td>${tags}</td>
+      <td style="font-family:'DM Mono';font-weight:900;color:var(--accent);font-size:15px;">${fmtPts(pts)}</td>
+      <td>${status}</td>
+      <td style="white-space:nowrap;display:flex;flex-direction:column;gap:4px;">${resolveBtn}<button class="btn btn-ghost btn-sm" onclick="openEditModal(${r.id})">✏️ 編集</button><button class="btn btn-ghost btn-sm" onclick="deleteRecord(${r.id})">🗑 削除</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function deleteRecord(id) {
+  if (!confirm('この申請を削除しますか？')) return;
+  S.records = S.records.filter(r=>r.id!==id);
+  saveAll(); renderAll(); renderHistory();
+  showToast('🗑️','削除しました','gray');
+}
+
+// ===================== APPROVAL =====================
+function updateApprovalBadge() {
+  const count = S.records.filter(r=>r.heavyStatus==='pending'&&r.items&&r.items.includes('heavy_done')).length;
+  const badge = document.getElementById('approval-badge');
+  badge.textContent = count;
+  badge.style.display = count>0?'inline':'none';
+}
+
+function renderApproval() {
+  const list = S.records.filter(r=>r.items&&r.items.includes('heavy_done')&&(r.heavyStatus==='pending'||r.heavyStatus==='approved'||r.heavyStatus==='rejected'));
+  const tbody = document.getElementById('approval-tbody');
+  const noEl = document.getElementById('no-approval');
+  if (!list.length) { tbody.innerHTML=''; noEl.style.display='block'; return; }
+  noEl.style.display='none';
+  tbody.innerHTML = list.map(r => {
+    const sel = `<select class="approval-select" onchange="setApproval(${r.id},this.value)">
+      <option value="pending" ${r.heavyStatus==='pending'?'selected':''}>⏳ 承認待ち</option>
+      <option value="approved" ${r.heavyStatus==='approved'?'selected':''}>✅ 承認</option>
+      <option value="rejected" ${r.heavyStatus==='rejected'?'selected':''}>❌ 否認</option>
+    </select>`;
+    const pts = r.heavyStatus==='approved'?4000:r.heavyStatus==='rejected'?1000:'—';
+    return `<tr>
+      <td>${fmtDate(r.date)}</td><td style="font-weight:700;">${r.staff}</td>
+      <td style="font-weight:700;">${r.property}</td><td>${r.owner}</td>
+      <td style="font-size:13px;color:var(--text3);">${r.note||'—'}</td>
+      <td style="font-family:'DM Mono';color:var(--accent);font-weight:900;">${typeof pts==='number'?fmtPts(pts)+' pt':pts}</td>
+      <td>${sel}</td>
+    </tr>`;
+  }).join('');
+}
+
+function setApproval(id, status) {
+  const rec = S.records.find(r=>r.id===id);
+  if (!rec) return;
+  rec.heavyStatus = status;
+  saveAll(); renderAll();
+  const msg = status==='approved'?'承認しました（4,000pt反映）':status==='rejected'?'否認しました（1,000ptに変更）':'承認待ちに戻しました';
+  showToast(status==='approved'?'✅':status==='rejected'?'❌':'⏳', msg, status==='approved'?'green':status==='rejected'?'red':'gray');
+  renderApproval();
+}
+
+// ===================== MONTHLY =====================
+function populateMonthSelects() {
+  const months = new Set();
+  const now = new Date();
+  for (let i=0;i<12;i++) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.add(d.toISOString().slice(0,7));
+  }
+  // also add months from records
+  S.records.forEach(r=>months.add(r.date.slice(0,7)));
+  const sorted = [...months].sort().reverse();
+  const sel = document.getElementById('report-month');
+  const fsel = document.getElementById('filter-month');
+  const cur = sel.value || currentMonth();
+  sel.innerHTML=''; fsel.innerHTML='<option value="">全月</option>';
+  sorted.forEach(m => {
+    sel.innerHTML += `<option value="${m}">${m}</option>`;
+    fsel.innerHTML += `<option value="${m}">${m}</option>`;
+  });
+  sel.value = cur;
+}
+
+function renderMonthly() {
+  const month = document.getElementById('report-month').value;
+  const data = S.records.filter(r=>r.date.startsWith(month));
+  const statsMap = {};
+  S.staff.forEach(s => statsMap[s]={name:s,monthPts:0,yearPts:0,mgmt:0,broker:0,mansion:0,parking:0,minor:0,normal_wip:0,normal_done:0,heavy_wip:0,heavy_done:0});
+  const year = month.slice(0,4);
+  S.records.filter(r=>r.date.startsWith(year)).forEach(r=>{ if(statsMap[r.staff]) statsMap[r.staff].yearPts+=calcPtsForDisplay(r); });
+  data.forEach(r=>{
+    if(!statsMap[r.staff]) return;
+    statsMap[r.staff].monthPts+=calcPtsForDisplay(r);
+    r.items.forEach(id=>{ if(statsMap[r.staff][id]!==undefined) statsMap[r.staff][id]++; });
+  });
+  const rows = Object.values(statsMap);
+  document.getElementById('monthly-tbody').innerHTML = rows.map(s=>`<tr>
+    <td style="font-weight:700;">${s.name}</td>
+    <td style="font-family:'DM Mono';color:var(--accent);font-weight:900;font-size:15px;">${fmtPts(s.monthPts)}</td>
+    <td style="font-family:'DM Mono';color:var(--text3);font-weight:700;">${fmtPts(s.yearPts)}</td>
+    <td style="text-align:center;">${s.mgmt}</td><td style="text-align:center;">${s.broker}</td>
+    <td style="text-align:center;">${s.mansion}</td><td style="text-align:center;">${s.parking}</td>
+    <td style="text-align:center;">${s.minor}</td><td style="text-align:center;">${s.normal_wip}</td>
+    <td style="text-align:center;">${s.normal_done}</td><td style="text-align:center;">${s.heavy_wip}</td>
+    <td style="text-align:center;">${s.heavy_done}</td>
+  </tr>`).join('');
+  const totalPts=rows.reduce((a,b)=>a+b.monthPts,0);
+  const totalMgmt=rows.reduce((a,b)=>a+b.mgmt,0);
+  const totalBroker=rows.reduce((a,b)=>a+b.broker,0);
+  const heavy=data.filter(r=>r.items.includes('heavy')&&r.heavyStatus==='approved').length;
+  document.getElementById('monthly-summary').innerHTML=[
+    {label:'月間総ポイント',val:fmtPts(totalPts)+'pt',color:'var(--accent)'},
+    {label:'総申請件数',val:data.length+'件',color:'var(--gold)'},
+    {label:'管理受託',val:totalMgmt+'件',color:'var(--green)'},
+    {label:'店舗・事務所契約',val:totalBroker+'件',color:'var(--green)'},
+    {label:'承認済み重案件',val:heavy+'件',color:'var(--orange)'},
+  ].map(s=>`<div class="month-stat"><div class="month-stat-label">${s.label}</div><div class="month-stat-val" style="color:${s.color}">${s.val}</div></div>`).join('');
+}
+
+// ===================== CSV =====================
+function exportCSV() {
+  const month = document.getElementById('report-month').value;
+  const data = S.records.filter(r=>r.date.startsWith(month));
+  const header = '申請日,担当者,物件名,オーナー,ポイント,ステータス,案件内容\n';
+  const rows = data.map(r=>{
+    const pts=calcPtsForDisplay(r);
+    const status=r.heavyStatus==='approved'?'承認済み':r.heavyStatus==='rejected'?'否認':r.heavyStatus==='pending'?'承認待ち':'通常';
+    return `${r.date},${r.staff},${r.property},${r.owner},${pts},${status},"${r.note||''}"`;
+  }).join('\n');
+  const blob=new Blob(['\uFEFF'+header+rows],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`賞与ポイント_${month}.csv`;a.click();
+  showToast('📥','CSVをエクスポートしました','blue');
+}
+
+// ===================== SETTINGS =====================
+function renderSettings() {
+  // Staff list
+  const staffList = document.getElementById('staff-list');
+  if (!S.staff.length) {
+    staffList.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0;">社員が登録されていません</div>';
+  } else {
+    staffList.innerHTML = S.staff.map((name,i)=>`
+      <div class="settings-row">
+        <div class="settings-name">${name}</div>
+        <button class="btn btn-ghost btn-sm" onclick="removeStaff(${i})">🗑 削除</button>
+      </div>`).join('');
+  }
+
+  // Items table
+  const tbody = document.getElementById('items-tbody');
+  tbody.innerHTML = S.items.map((item,i)=>`
+    <tr>
+      <td><input type="text" value="${item.label}" onchange="updateItem(${i},'label',this.value)" style="font-size:14px;padding:8px 10px;"></td>
+      <td><input type="number" value="${item.pts}" onchange="updateItem(${i},'pts',parseInt(this.value))" style="width:110px;font-size:14px;padding:8px 10px;font-family:'DM Mono',monospace;"></td>
+      <td><input type="text" value="${item.examples}" onchange="updateItem(${i},'examples',this.value)" style="font-size:13px;padding:8px 10px;color:var(--text3);"></td>
+      <td style="color:var(--text3);font-size:12px;">${item.heavy?'<span class="tag tag-red">承認制</span>':''}</td>
+    </tr>`).join('');
+}
+
+function addStaff() {
+  const input = document.getElementById('new-staff-name');
+  const name = input.value.trim();
+  if (!name) { showToast('❗','名前を入力してください','red'); return; }
+  if (S.staff.includes(name)) { showToast('❗','すでに登録されています','red'); return; }
+  S.staff.push(name);
+  saveAll(); rebuildUI(); renderSettings();
+  input.value = '';
+  showToast('✅',`「${name}」を追加しました`,'green');
+}
+
+function removeStaff(index) {
+  const name = S.staff[index];
+  if (!confirm(`「${name}」を削除しますか？\n※過去の申請履歴は残ります`)) return;
+  S.staff.splice(index,1);
+  saveAll(); rebuildUI(); renderSettings();
+  showToast('🗑️',`「${name}」を削除しました`,'gray');
+}
+
+function updateItem(index, field, value) {
+  S.items[index][field] = value;
+  saveAll(); buildCheckboxes();
+}
+
+function resetAllData() {
+  if (!confirm('本当にすべてのデータを削除しますか？\nこの操作は取り消せません。')) return;
+  localStorage.clear();
+  S = loadState();
+  rebuildUI(); renderAll();
+  showToast('🗑️','全データをリセットしました','red');
+}
+
+
+
+// ===================== EDIT MODAL =====================
+let editTargetId = null;
+
+function openEditModal(id) {
+  const rec = S.records.find(r=>r.id===id);
+  if (!rec) return;
+  editTargetId = id;
+
+  document.getElementById('em-date').value = rec.date;
+  document.getElementById('em-property').value = rec.property;
+  document.getElementById('em-owner').value = rec.owner;
+  document.getElementById('em-note').value = rec.note || '';
+
+  // Staff select
+  const emStaff = document.getElementById('em-staff');
+  emStaff.innerHTML = S.staff.map(s=>`<option value="${s}" ${s===rec.staff?'selected':''}>${s}</option>`).join('');
+  const emStaff2 = document.getElementById('em-staff2');
+  emStaff2.innerHTML = '<option value="">なし（1人対応）</option>' + S.staff.map(s=>`<option value="${s}" ${s===rec.splitWith?'selected':''}>${s}</option>`).join('');
+
+  // Items checkboxes
+  const emItems = document.getElementById('em-items');
+  emItems.innerHTML = S.items.map(item=>`
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:2px solid ${rec.items.includes(item.id)?'var(--accent)':'var(--border)'};border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">
+      <input type="checkbox" value="${item.id}" ${rec.items.includes(item.id)?'checked':''} style="width:18px;height:18px;accent-color:var(--accent);">
+      ${item.label}
+      <span style="margin-left:auto;font-family:'DM Mono';font-size:13px;color:var(--accent);">＋${item.pts.toLocaleString()}pt</span>
+    </label>`).join('');
+
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editTargetId = null;
+}
+
+function saveEdit() {
+  const rec = S.records.find(r=>r.id===editTargetId);
+  if (!rec) return;
+
+  const date = document.getElementById('em-date').value;
+  const staff = document.getElementById('em-staff').value;
+  const staff2 = document.getElementById('em-staff2').value;
+  const property = document.getElementById('em-property').value.trim();
+  const owner = document.getElementById('em-owner').value.trim();
+  const note = document.getElementById('em-note').value.trim();
+  const items = [...document.querySelectorAll('#em-items input[type=checkbox]:checked')].map(cb=>cb.value);
+
+  if (!date||!staff||!property||!owner) { showToast('❗','必須項目をすべて入力してください','red'); return; }
+  if (staff2 && staff2===staff) { showToast('❗','1人目と2人目に同じ担当者は選べません','red'); return; }
+  if (!items.length) { showToast('❗','加点項目を1つ以上選択してください','red'); return; }
+
+  const hasHeavy = items.includes('heavy_done');
+  const hasWip = items.some(id=>['normal_wip','heavy_wip'].includes(id));
+  const hasDone = items.some(id=>['normal_done','heavy_done','minor'].includes(id));
+  rec.date = date;
+  rec.staff = staff;
+  rec.property = property;
+  rec.owner = owner;
+  rec.note = note;
+  rec.items = items;
+  rec.isSplit = !!staff2;
+  rec.splitWith = staff2||null;
+  // 重案件承認ステータス
+  if (hasHeavy && !rec.heavyStatus) rec.heavyStatus = 'pending';
+  if (!hasHeavy) rec.heavyStatus = null;
+  // 解決済みフラグ：対応中項目がなくなったらリセット、解決項目があればtrue
+  if (!hasWip && !hasDone) rec.resolved = false;
+  else if (hasDone) rec.resolved = true;
+  else if (!hasDone && hasWip) rec.resolved = false;
+
+  saveAll(); renderAll(); closeEditModal(); renderHistory();
+  showToast('✅','申請内容を更新しました','green');
+}
+
+// モーダル外クリックで閉じる
+document.addEventListener('click', e => {
+  const modal = document.getElementById('edit-modal');
+  if (e.target === modal) closeEditModal();
+});
+
+// ===================== RESOLVE MODAL =====================
+let resolveTargetId = null;
+
+function openResolveModal(id) {
+  const rec = S.records.find(r=>r.id===id);
+  if (!rec) return;
+  resolveTargetId = id;
+  document.getElementById('rm-property').textContent = rec.property;
+  document.getElementById('rm-owner').textContent = rec.owner;
+  document.getElementById('rm-staff').textContent = rec.staff;
+  const wipPts = calcPtsForDisplay(rec);
+  document.getElementById('rm-wip-pts').textContent = fmtPts(wipPts) + ' pt（対応中分）';
+  document.getElementById('rm-type').value = '';
+  document.getElementById('rm-note').value = '';
+  document.getElementById('resolve-modal').classList.add('open');
+}
+
+function closeResolveModal() {
+  document.getElementById('resolve-modal').classList.remove('open');
+  resolveTargetId = null;
+}
+
+function submitResolve() {
+  const rec = S.records.find(r=>r.id===resolveTargetId);
+  if (!rec) return;
+  const type = document.getElementById('rm-type').value;
+  const note = document.getElementById('rm-note').value.trim();
+  if (!type) { showToast('❗','解決種別を選択してください','red'); return; }
+
+  // 新しいレコードとして追加（解決申請）
+  const hasHeavy = type === 'heavy_done';
+  const newRec = {
+    id: S.nextId++,
+    date: today(),
+    staff: rec.staff,
+    property: rec.property,
+    owner: rec.owner,
+    note: note || '解決済み',
+    items: [type],
+    heavyStatus: hasHeavy ? 'pending' : null,
+    resolved: true,
+    wipRef: rec.id,
+    createdAt: new Date().toISOString()
+  };
+  // 元のWIP記録に解決済みフラグ
+  rec.resolved = true;
+
+  S.records.unshift(newRec);
+  saveAll(); renderAll();
+  closeResolveModal();
+
+  const item = S.items.find(i=>i.id===type);
+  const ptsMsg = hasHeavy ? '4,000pt（承認待ち）' : fmtPts(item?.pts||0)+'pt';
+  showToast('✅', `解決済みで登録しました（＋${ptsMsg}）`, 'green');
+  if (hasHeavy) setTimeout(()=>showToast('🔔','社長に承認通知を送信しました','blue'),1500);
+  renderHistory();
+}
+
+// モーダル外クリックで閉じる
+document.addEventListener('click', e => {
+  const modal = document.getElementById('resolve-modal');
+  if (e.target === modal) closeResolveModal();
+});
+
+// ===================== TOAST =====================
+function showToast(icon, text, type='green') {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-text').textContent = text;
+  const colors={green:'#166b3e',blue:'#1a56cc',red:'#b83025',gray:'#2e3f5c',orange:'#b05000'};
+  t.style.borderLeft = `4px solid ${colors[type]||'#ccc'}`;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
